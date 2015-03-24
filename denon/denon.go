@@ -93,7 +93,7 @@ func main() {
 				time.Sleep(5 * time.Second)
 				return
 			}
-			conn.GetCommandChan() <- append(cmd, '\r')
+			conn.GetCommandChan() <- cmd
 			refresh = time.After(200 * time.Millisecond)
 
 		case _ = <-refresh:

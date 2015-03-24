@@ -116,6 +116,16 @@ func commandProxy(davr *DAVR) {
 			if !ok {
 				return
 			}
+
+			if len(cmd) == 0 {
+				continue
+			}
+
+			// Allow commands that do not have a trailing \r
+			if cmd[len(cmd)-1] != 0xd {
+				cmd = append(cmd, 0xd)
+			}
+
 			davr.conn.Write(cmd)
 		}
 	}
