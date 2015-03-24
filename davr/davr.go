@@ -31,8 +31,8 @@ import (
 
 // eventReader reads from r and assembles messages
 func eventReader(r io.Reader, out chan<- []byte) {
-	buf := make([]byte, 1024)
-	assy := new(bytes.Buffer)
+	assy := make([]byte, 202) // assembly buffer
+	buf := make([]byte, 101)
 
 	for {
 		n, err := r.Read(buf)
@@ -42,14 +42,22 @@ func eventReader(r io.Reader, out chan<- []byte) {
 			return
 		}
 
-		assy.Write(buf[:n])
+		if n == 0 {
+			continue
+		}
 
-		for { // assmble commands that are spread over mutliple reads
-			ev, e := assy.ReadBytes(0xd)
-			if e != nil || len(ev) == 0 {
+		assy = append(assy, buf[:n]...)
+
+		for { // assemble commands that are spread over mutliple reads
+			evTrail := bytes.SplitN(assy, []byte{0xd}, 2)
+			if len(evTrail) != 2 {
 				break
 			}
-			out <- ev
+			ev := evTrail[0]
+			if len(ev) != 0 {
+				out <- ev
+			}
+			assy = evTrail[1]
 		}
 	}
 }
