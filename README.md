@@ -1,6 +1,8 @@
 Denon AVR Remote Library
 ====
 
+[![GoDoc](https://godoc.org/github.com/fritschy/denon-avr/davr?status.svg)](https://godoc.org/github.com/fritschy/denon-avr/davr)
+
 Simple library that provides a channel based communication
 with a Denon AVR. Most importantly does event assembly from
 multiple messages and sends them to the caller in generic
