@@ -39,7 +39,7 @@ type commandCategory struct {
 	suffixes []command
 }
 
-// Opaque struct holding denon AVR comments and possibly descriptions
+// DenonCommands holds Denon AVR commands and possibly descriptions
 type DenonCommands struct {
 	commands []commandCategory
 	tree     *radixNode

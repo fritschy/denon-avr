@@ -23,9 +23,10 @@ package davr
 import "bytes"
 
 const (
-	DavrEventNSE = iota // DavrEventNSE represents a display test line of up to 96 bytes
-	// DavrEventNSA
-	DavrEventGeneric // DavrEventGeneric represents a simple printable string
+	// DavrEventNSE represents a display test line of up to 96 bytes
+	DavrEventNSE = iota
+	// DavrEventGeneric represents a simple printable string
+	DavrEventGeneric
 )
 
 // DavrEvent represents an event from a Denon AVR
@@ -38,12 +39,12 @@ type DavrEvent struct {
 	event  uint8
 }
 
-func (self *DavrEvent) String() string {
-	if self.event == DavrEventGeneric {
-		return string(self.data)
+func (event *DavrEvent) String() string {
+	if event.event == DavrEventGeneric {
+		return string(event.data)
 	}
 
-	if len(self.data) > 4 {
+	if len(event.data) > 4 {
 		// This message is made up of 101 bytes:
 		//
 		// NSE[0-8]TEXT<CR>
@@ -64,7 +65,7 @@ func (self *DavrEvent) String() string {
 		//
 		// Additionally, NSE0 seems to be a general satus or title.
 
-		ev := append([]byte{}, self.data...)
+		ev := append([]byte{}, event.data...)
 		n := int(ev[3]) - int('0')
 
 		var flags uint8
@@ -100,7 +101,7 @@ func (self *DavrEvent) String() string {
 	}
 
 	// ARGH!
-	return string(self.data)
+	return string(event.data)
 }
 
 // CookEvent returns a slightly higher level representation of an event

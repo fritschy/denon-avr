@@ -102,7 +102,7 @@ func readerToChan(r io.Reader, out chan []byte) {
 	}
 }
 
-// Represents a Denon AVR connection
+// DAVR represents a Denon AVR connection
 type DAVR struct {
 	conn      net.Conn
 	eventIn   chan []byte /// events from avr can be read from here
@@ -121,7 +121,7 @@ func run(davr *DAVR) {
 	}
 }
 
-// Connect to an AVR
+// Connect creates a Denon AVR connection, or returns an error value
 func Connect(hostPort string) (*DAVR, error) {
 	var conn string
 
