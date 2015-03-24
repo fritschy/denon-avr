@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/bobappleyard/readline"
 	"github.com/fritschy/denon-avr/davr"
+	"os"
 	"strings"
 	"time"
 )
@@ -63,8 +64,8 @@ func main() {
 
 	conn, err := davr.New(*avr_host)
 	if err != nil {
-		fmt.Errorf("%s\n", err)
-		return
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 
 	davr.ShowCommandHelp()
