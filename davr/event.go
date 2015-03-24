@@ -44,7 +44,7 @@ func (event *DavrEvent) String() string {
 		return string(event.data)
 	}
 
-	if len(event.data) > 4 {
+	if len(event.data) > 5 {
 		// This message is made up of 101 bytes:
 		//
 		// NSE[0-8]TEXT<CR>
@@ -72,9 +72,14 @@ func (event *DavrEvent) String() string {
 
 		if n >= 1 && n <= 6 {
 			flags = uint8(ev[4])
-			// copy(ev[4:], ev[5:])
-			copy(ev[1:], ev[:4])
+			copy(ev[1:], ev[:4]) // skip bit flags byte
 			ev = ev[1:]
+		}
+
+		// disregard everything after the first NUL byte
+		nulidx := bytes.IndexByte(ev, 0) // be safe...?
+		if nulidx != -1 {
+			ev = ev[:nulidx]
 		}
 
 		if flags&0x2b != 0 { // 0b101011
@@ -109,12 +114,6 @@ func (event *DavrEvent) String() string {
 // in that they contain a bit field for "cursor information"
 func CookEvent(ev []byte) DavrEvent {
 	if len(ev) > 4 && ev[0] == 'N' && ev[1] == 'S' && (ev[2] == 'E' || ev[2] == 'A') {
-		// disregard everything after the first NUL byte
-		nulidx := bytes.IndexByte(ev, 0) // be safe...?
-		if nulidx != -1 {
-			ev = ev[:nulidx]
-		}
-
 		return DavrEvent{
 			ev, [][]byte{}, DavrEventNSE,
 		}

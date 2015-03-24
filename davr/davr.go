@@ -31,7 +31,7 @@ import (
 
 // eventReader reads from r and assembles messages
 func eventReader(r io.Reader, out chan<- []byte) {
-	assy := make([]byte, 202) // assembly buffer
+	assy := make([]byte, 0, 202) // assembly buffer
 	buf := make([]byte, 101)
 
 	for {
