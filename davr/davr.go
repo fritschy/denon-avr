@@ -29,8 +29,8 @@ import (
 	"strings"
 )
 
-// readerToChan reads from r and assembles messages
-func readerToChan(r io.Reader, out chan []byte) {
+// eventReader reads from r and assembles messages
+func eventReader(r io.Reader, out chan<- []byte) {
 	buf := make([]byte, 1024)
 	assy := new(bytes.Buffer)
 
@@ -40,10 +40,6 @@ func readerToChan(r io.Reader, out chan []byte) {
 		if err != nil {
 			close(out)
 			return
-		}
-
-		if n == 0 {
-			continue
 		}
 
 		assy.Write(buf[:n])
@@ -58,17 +54,11 @@ func readerToChan(r io.Reader, out chan []byte) {
 	}
 }
 
-// DAVR represents a Denon AVR connection
-type DAVR struct {
-	conn      net.Conn
-	eventIn   chan []byte /// events from avr can be read from here
-	commandIn chan []byte /// commands to the avr can be written here
-}
-
-func commandProxy(davr *DAVR) {
+// commandWriter writes commands to w
+func commandWriter(commandIn <-chan []byte, w io.Writer) {
 	for {
 		select {
-		case cmd, ok := <-davr.commandIn:
+		case cmd, ok := <-commandIn:
 			if !ok {
 				return
 			}
@@ -82,9 +72,16 @@ func commandProxy(davr *DAVR) {
 				cmd = append(cmd, 0xd)
 			}
 
-			davr.conn.Write(cmd)
+			w.Write(cmd)
 		}
 	}
+}
+
+// DAVR represents a Denon AVR connection
+type DAVR struct {
+	conn      net.Conn
+	eventIn   chan []byte /// events from avr can be read from here
+	commandIn chan []byte /// commands to the avr can be written here
 }
 
 // New creates a Denon AVR connection, or returns an error value
@@ -106,8 +103,8 @@ func New(hostPort string) (*DAVR, error) {
 
 	davr := &DAVR{c, make(chan []byte), make(chan []byte)}
 
-	go readerToChan(c, davr.eventIn)
-	go commandProxy(davr)
+	go eventReader(c, davr.eventIn)
+	go commandWriter(davr.commandIn, c)
 
 	return davr, nil
 }
