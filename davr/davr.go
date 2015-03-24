@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Implement channel-centric communication with a Denon AVR
+// Package davr implements channel-centric communication with a Denon AVR
 package davr
 
 import (
