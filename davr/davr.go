@@ -109,7 +109,7 @@ type DAVR struct {
 	commandIn chan []byte /// commands to the avr can be written here
 }
 
-func run(davr *DAVR) {
+func commandProxy(davr *DAVR) {
 	for {
 		select {
 		case cmd, ok := <-davr.commandIn:
@@ -121,8 +121,10 @@ func run(davr *DAVR) {
 	}
 }
 
-// Connect creates a Denon AVR connection, or returns an error value
-func Connect(hostPort string) (*DAVR, error) {
+// New creates a Denon AVR connection, or returns an error value
+// hostPort is of the form "host[:port]" if :port is omitted, the
+// default port 23 is used.
+func New(hostPort string) (*DAVR, error) {
 	var conn string
 
 	if strings.Contains(hostPort, ":") {
@@ -146,22 +148,22 @@ func Connect(hostPort string) (*DAVR, error) {
 
 	davr := &DAVR{c, eventIn, commandIn}
 
-	go run(davr)
+	go commandProxy(davr)
 
 	return davr, nil
 }
 
-// GetCommandChannel returns the write only command-channel to the AVR
-func (avr *DAVR) GetCommandChannel() chan<- []byte {
+// GetCommandChan returns the write only command-channel to the AVR
+func (avr *DAVR) GetCommandChan() chan<- []byte {
 	return avr.commandIn
 }
 
-// GetEventChannel seturns the read-only event channel from the AVR
+// GetEventChan seturns the read-only event channel from the AVR
 // Events returned through this channel are already assembled
 // and guarantieed to be bounded and complete
 // When reading from this channel, check the ok-flag in
 // in order to determine if the connection is still alive.
-func (avr *DAVR) GetEventChannel() <-chan []byte {
+func (avr *DAVR) GetEventChan() <-chan []byte {
 	return avr.eventIn
 }
 

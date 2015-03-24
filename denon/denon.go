@@ -29,7 +29,7 @@ import (
 	"time"
 )
 
-func input_reader() <-chan []byte {
+func inputReader() <-chan []byte {
 	in := make(chan []byte)
 
 	readline.SetWordBreaks("")
@@ -61,7 +61,7 @@ func main() {
 	avr_host := flag.String("host", "avr", "AVR host[:port] to talk to (default: avr[:23])")
 	flag.Parse()
 
-	conn, err := davr.Connect(*avr_host)
+	conn, err := davr.New(*avr_host)
 	if err != nil {
 		fmt.Errorf("%s\n", err)
 		return
@@ -69,14 +69,14 @@ func main() {
 
 	davr.ShowCommandHelp()
 
-	input := input_reader()
-	no_refresh := make(<-chan time.Time)
-	refresh := no_refresh
+	input := inputReader()
+	noRefresh := make(<-chan time.Time)
+	refresh := noRefresh
 
 	for {
 		select {
-		case ev, ok := <-conn.GetEventChannel():
-			if refresh == no_refresh {
+		case ev, ok := <-conn.GetEventChan():
+			if refresh == noRefresh {
 				fmt.Println("")
 			}
 			if !ok {
@@ -89,14 +89,16 @@ func main() {
 
 		case cmd, ok := <-input:
 			if !ok {
+				conn.Close()
+				time.Sleep(5 * time.Second)
 				return
 			}
-			conn.GetCommandChannel() <- append(cmd, '\r')
+			conn.GetCommandChan() <- append(cmd, '\r')
 			refresh = time.After(200 * time.Millisecond)
 
 		case _ = <-refresh:
 			readline.RefreshLine()
-			refresh = no_refresh
+			refresh = noRefresh
 		}
 	}
 }
