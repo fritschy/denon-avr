@@ -13,7 +13,7 @@ completion.
 Installation
 ----
 
-`go install github.com/fritschy/denon-avr/denon` To install
+`go install github.com/fritschy/denon-avr/cmd/denon` To install
 the command line utility, or just
 `go install github.com/fritschy/denon-avr/davr` if only the
 *library* is needed.
