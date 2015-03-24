@@ -29,33 +29,33 @@ import (
 	"strings"
 )
 
-type pipe_step func(input, output chan []byte)
+type pipeStep func(input, output chan []byte)
 
-func event_assembler(raw_in, event_out chan []byte) {
+func eventAssembler(rawIn, eventOut chan []byte) {
 	scratch := make([]byte, 0)
 	sep := []byte{0xd}
 
 	for {
-		input, ok := <-raw_in
+		input, ok := <-rawIn
 
 		if !ok {
-			close(event_out)
+			close(eventOut)
 			break
 		}
 
 		scratch = append(scratch, input...)
 
 		for {
-			ev_rest := bytes.SplitN(scratch, sep, 2)
+			evRest := bytes.SplitN(scratch, sep, 2)
 
-			if len(ev_rest) != 2 {
+			if len(evRest) != 2 {
 				break
 			}
 
-			event_out <- ev_rest[0]
+			eventOut <- evRest[0]
 
-			if len(ev_rest) == 2 {
-				scratch = ev_rest[1]
+			if len(evRest) == 2 {
+				scratch = evRest[1]
 			} else {
 				// no remaining bytes, clear scratch
 				scratch = scratch[0:0]
@@ -71,7 +71,7 @@ func producer(f func(out chan []byte)) chan []byte {
 }
 
 // create a pipe-segment using func f
-func pipe(f pipe_step, in chan []byte) chan []byte {
+func pipe(f pipeStep, in chan []byte) chan []byte {
 	out := make(chan []byte)
 	go f(in, out)
 	return out
@@ -104,15 +104,15 @@ func readerToChan(r io.Reader, out chan []byte) {
 
 // Represents a Denon AVR connection
 type DAVR struct {
-	conn       net.Conn
-	event_in   chan []byte /// events from avr can be read from here
-	command_in chan []byte /// commands to the avr can be written here
+	conn      net.Conn
+	eventIn   chan []byte /// events from avr can be read from here
+	commandIn chan []byte /// commands to the avr can be written here
 }
 
 func run(davr *DAVR) {
 	for {
 		select {
-		case cmd, ok := <-davr.command_in:
+		case cmd, ok := <-davr.commandIn:
 			if !ok {
 				return
 			}
@@ -136,37 +136,37 @@ func Connect(hostPort string) (*DAVR, error) {
 		return nil, e
 	}
 
-	command_in := make(chan []byte)
+	commandIn := make(chan []byte)
 
 	// setup event pipe
-	event_in := pipe(event_assembler,
+	eventIn := pipe(eventAssembler,
 		producer(func(out chan []byte) {
 			readerToChan(c, out)
 		}))
 
-	davr := &DAVR{c, event_in, command_in}
+	davr := &DAVR{c, eventIn, commandIn}
 
 	go run(davr)
 
 	return davr, nil
 }
 
-// Return the write only command-channel to the AVR
-func (self *DAVR) GetCommandChannel() chan<- []byte {
-	return self.command_in
+// GetCommandChannel returns the write only command-channel to the AVR
+func (avr *DAVR) GetCommandChannel() chan<- []byte {
+	return avr.commandIn
 }
 
-// Return the read-only event channel from the AVR
+// GetEventChannel seturns the read-only event channel from the AVR
 // Events returned through this channel are already assembled
 // and guarantieed to be bounded and complete
 // When reading from this channel, check the ok-flag in
 // in order to determine if the connection is still alive.
-func (self *DAVR) GetEventChannel() <-chan []byte {
-	return self.event_in
+func (avr *DAVR) GetEventChannel() <-chan []byte {
+	return avr.eventIn
 }
 
 // Close a Denon AVR connection
-func (self *DAVR) Close() {
-	self.conn.Close()
-	close(self.command_in)
+func (avr *DAVR) Close() {
+	avr.conn.Close()
+	close(avr.commandIn)
 }

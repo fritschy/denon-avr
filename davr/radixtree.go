@@ -23,33 +23,33 @@ package davr
 import "fmt"
 
 const (
-	PrefixCharsCount = 26 + 1 + 1 + 1 + 10 // A-Z, space, colon, question, 0-9
-	NumberIndexBase  = 26
-	SpaceIndex       = 36
-	QuestionIndex    = 37
-	ColonIndex       = 38
+	prefixCharsCount = 26 + 1 + 1 + 1 + 10 // A-Z, space, colon, question, 0-9
+	numberIndexBase  = 26
+	spaceIndex       = 36
+	questionIndex    = 37
+	colonIndex       = 38
 )
 
 // do not store actual chars
 type radixNode struct {
 	end  bool /// a string finishes here, too
-	next [PrefixCharsCount]*radixNode
+	next [prefixCharsCount]*radixNode
 }
 
-const index2char_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ?:"
+const index2charMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ?:"
 
 func char2index(r byte) int {
 	switch {
 	case r == '?':
-		return QuestionIndex
+		return questionIndex
 	case r == ':':
-		return ColonIndex
+		return colonIndex
 	case r == ' ':
-		return SpaceIndex
+		return spaceIndex
 	case r >= 'A' && r <= 'Z':
 		return int(r - 'A')
 	case r >= '0' && r <= '9':
-		return NumberIndexBase + int(r-'0')
+		return numberIndexBase + int(r-'0')
 	default:
 		return -1
 	}
@@ -57,41 +57,41 @@ func char2index(r byte) int {
 
 func index2char(i int) byte {
 	switch {
-	case i < len(index2char_map):
-		return byte(index2char_map[i])
+	case i < len(index2charMap):
+		return byte(index2charMap[i])
 	default:
 		return 0
 	}
 }
 
-func (self *radixNode) insert(str string) {
+func (node *radixNode) insert(str string) {
 	if len(str) == 0 {
-		self.end = true
+		node.end = true
 		return
 	}
 	r := byte(str[0])
 	idx := char2index(r)
 	if idx == -1 {
-		fmt.Errorf("Cannot Insert rune '%v' into RadixNode\n", r)
+		fmt.Errorf("cannot insert rune '%v' into radixNode\n", r)
 		return
 	}
-	if self.next[idx] == nil {
-		self.next[idx] = &radixNode{}
+	if node.next[idx] == nil {
+		node.next[idx] = &radixNode{}
 	}
-	self.next[idx].insert(str[1:])
+	node.next[idx].insert(str[1:])
 }
 
 // char 0x0 denotes root-node
-func (self *radixNode) getWords(char byte, cur string, ret *[]string) {
+func (node *radixNode) getWords(char byte, cur string, ret *[]string) {
 	if char != 0 {
 		cur = fmt.Sprintf("%s%c", cur, char)
 	}
 
-	if self.end {
+	if node.end {
 		*ret = append(*ret, cur)
 	}
 
-	for i, n := range self.next {
+	for i, n := range node.next {
 		if n != nil {
 			n.getWords(index2char(i), cur, ret)
 		}
@@ -99,10 +99,10 @@ func (self *radixNode) getWords(char byte, cur string, ret *[]string) {
 }
 
 // Char 0x0 denotes root-node
-func (self *radixNode) query(char byte, str string, cur string, ret *[]string) {
+func (node *radixNode) query(char byte, str string, cur string, ret *[]string) {
 	if len(str) == 0 {
 		// empty Query, return all next words...
-		self.getWords(char, cur, ret)
+		node.getWords(char, cur, ret)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (self *radixNode) query(char byte, str string, cur string, ret *[]string) {
 	idx := char2index(r)
 
 	if idx == -1 { // could not map character to index
-		fmt.Errorf("Cannot map character '%v' to index\n", r)
+		fmt.Errorf("cannot map character '%v' to index\n", r)
 		return
 	}
 
@@ -118,11 +118,11 @@ func (self *radixNode) query(char byte, str string, cur string, ret *[]string) {
 		cur = fmt.Sprintf("%s%c", cur, char)
 	}
 
-	if self.end {
+	if node.end {
 		*ret = append(*ret, cur)
 	}
 
-	if self.next[idx] != nil {
-		self.next[idx].query(index2char(idx), str[1:], cur, ret)
+	if node.next[idx] != nil {
+		node.next[idx].query(index2char(idx), str[1:], cur, ret)
 	}
 }

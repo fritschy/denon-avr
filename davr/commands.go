@@ -39,13 +39,14 @@ type commandCategory struct {
 	suffixes []command
 }
 
+// Opaque struct holding denon AVR comments and possibly descriptions
 type DenonCommands struct {
 	commands []commandCategory
 	tree     *radixNode
 	count    uint
 }
 
-func make_commands(args ...string) []command {
+func makeCommands(args ...string) []command {
 	c := make([]command, 0, len(args)/2)
 	for i := 0; i < len(args); i += 2 {
 		c = append(c, command{args[i], args[i+1]})
@@ -54,51 +55,52 @@ func make_commands(args ...string) []command {
 }
 
 // Oh this sucks so hard, I don't even...
-func init_denon_commands() *DenonCommands {
-	q_on_off := make_commands("?", "", "ON", "", "OFF", "")
-	denon_commands := &DenonCommands{
+func initDenonCommands() *DenonCommands {
+	qOnOff := makeCommands("?", "", "ON", "", "OFF", "")
+	denonCommands := &DenonCommands{
 		[]commandCategory{
-			commandCategory{"PW", "Main Power", make_commands("?", "", "ON", "", "STANDBY", "")},
-			commandCategory{"ZM", "Main Zone", append(q_on_off, make_commands("FAVORITE1", "", "FAVORITE2", "", "FAVORITE3", "", "FAVORITE4", "")...)},
-			// CommandCategory{"Z2", "Zone 2", q_on_off},
-			// CommandCategory{"Z3", "Zone 3", q_on_off},
-			commandCategory{"MV", "Master Volume", make_commands("?", "", "UP", "", "DOWN", "")},
-			commandCategory{"MU", "Mute", q_on_off},
-			commandCategory{"SI", "Select Input", make_commands("?", "", "BD", "", "DVD", "", "TV", "", "MPLAY", "", "NET", "", "GAME", "")},
-			commandCategory{"SV", "Select Video", make_commands("?", "", "BD", "", "DVD", "", "TV", "", "MPLAY", "")}, // not more?!
-			commandCategory{"MS", "Mode Select", make_commands("?", "", "STEREO", "", "MOVIE", "", "MUSIC", "", "DIRECT", "", "PURE DIRECT", "", "QUICK ?", "",
+			commandCategory{"PW", "Main Power", makeCommands("?", "", "ON", "", "STANDBY", "")},
+			commandCategory{"ZM", "Main Zone", append(qOnOff, makeCommands("FAVORITE1", "", "FAVORITE2", "", "FAVORITE3", "", "FAVORITE4", "")...)},
+			// CommandCategory{"Z2", "Zone 2", qOnOff},
+			// CommandCategory{"Z3", "Zone 3", qOnOff},
+			commandCategory{"MV", "Master Volume", makeCommands("?", "", "UP", "", "DOWN", "")},
+			commandCategory{"MU", "Mute", qOnOff},
+			commandCategory{"SI", "Select Input", makeCommands("?", "", "BD", "", "DVD", "", "TV", "", "MPLAY", "", "NET", "", "GAME", "")},
+			commandCategory{"SV", "Select Video", makeCommands("?", "", "BD", "", "DVD", "", "TV", "", "MPLAY", "")}, // not more?!
+			commandCategory{"MS", "Mode Select", makeCommands("?", "", "STEREO", "", "MOVIE", "", "MUSIC", "", "DIRECT", "", "PURE DIRECT", "", "QUICK ?", "",
 				"QUICK1", "", "QUICK1 MEMORY", "",
 				"QUICK2", "", "QUICK2 MEMORY", "",
 				"QUICK3", "", "QUICK3 MEMORY", "",
 				"QUICK4", "", "QUICK4 MEMORY", "",
 				"QUICK5", "", "QUICK5 MEMORY", "")},
-			commandCategory{"PSMULTEQ:", "MultEQ Settings", make_commands(" ?", "", "AUDYSSEY", "", "FLAT", "", "MANUAL", "", "OFF", "")},
-			commandCategory{"PSDYNEQ ", "Dynamic EQ Settings", q_on_off},
-			commandCategory{"PSREFLEV ", "DynEQ Reference Level", make_commands("?", "", "0", "", "5", "", "10", "", "15", "")},
-			commandCategory{"PSDYNVOL ", "Dynamic Volume Settings", make_commands("?", "", "LIT", "", "MED", "", "HEV", "", "OFF", "")},
-			commandCategory{"PSLFC ", "Low Frequency Containment", q_on_off},
-			commandCategory{"PSCNTAMT ", "LFC Amount", make_commands("UP", "", "DOWN", "", "?", "")},
-			commandCategory{"NS", "Player Control", make_commands("E", "Report Display Text (UTF-8)", "A", "Report Display Text (ASCII)", "RND", "Toggle Random", "RPT", "Toggle Repeat", "D", "Direct Text Search ('NSDx, where x = 0-9,A-Z)")},
-			commandCategory{"MN", "Menu Control", make_commands("MEN?", "", "CUP", "up", "CDN", "down", "CRT", "right", "CLT", "left", "ENT", "enter", "OPT", "option", "INF", "info", "RTN", "return")},
+			commandCategory{"PSMULTEQ:", "MultEQ Settings", makeCommands(" ?", "", "AUDYSSEY", "", "FLAT", "", "MANUAL", "", "OFF", "")},
+			commandCategory{"PSDYNEQ ", "Dynamic EQ Settings", qOnOff},
+			commandCategory{"PSREFLEV ", "DynEQ Reference Level", makeCommands("?", "", "0", "", "5", "", "10", "", "15", "")},
+			commandCategory{"PSDYNVOL ", "Dynamic Volume Settings", makeCommands("?", "", "LIT", "", "MED", "", "HEV", "", "OFF", "")},
+			commandCategory{"PSLFC ", "Low Frequency Containment", qOnOff},
+			commandCategory{"PSCNTAMT ", "LFC Amount", makeCommands("UP", "", "DOWN", "", "?", "")},
+			commandCategory{"NS", "Player Control", makeCommands("E", "Report Display Text (UTF-8)", "A", "Report Display Text (ASCII)", "RND", "Toggle Random", "RPT", "Toggle Repeat", "D", "Direct Text Search ('NSDx, where x = 0-9,A-Z)")},
+			commandCategory{"MN", "Menu Control", makeCommands("MEN?", "", "CUP", "up", "CDN", "down", "CRT", "right", "CLT", "left", "ENT", "enter", "OPT", "option", "INF", "info", "RTN", "return")},
 		},
 		nil,
 		0,
 	}
 
-	denon_commands.tree = &radixNode{}
-	for _, cc := range denon_commands.commands {
+	denonCommands.tree = &radixNode{}
+	for _, cc := range denonCommands.commands {
 		for _, c := range cc.suffixes {
-			denon_commands.tree.insert(strings.Join([]string{cc.prefix, c[0]}, ""))
-			denon_commands.count++
+			denonCommands.tree.insert(strings.Join([]string{cc.prefix, c[0]}, ""))
+			denonCommands.count++
 		}
 	}
 
-	return denon_commands
+	return denonCommands
 }
 
 var commands *DenonCommands
 
-// Return a readline completer, can be used for github.com/bobappleyard/readline
+// MakeReadlineCompleter returns a readline completer that can be used with
+// github.com/bobappleyard/readline
 func MakeReadlineCompleter() func(query, ctx string) []string {
 	words := make([]string, 0, commands.count)
 	return func(query, ctx string) []string {
@@ -108,7 +110,7 @@ func MakeReadlineCompleter() func(query, ctx string) []string {
 	}
 }
 
-// Mostly useless, prints some commands and descriptions thereof on stdout
+// ShowCommandHelp is mostly useless, prints some commands and descriptions thereof on stdout
 func ShowCommandHelp() {
 	fmt.Println("I know the following commands:\n")
 
@@ -131,5 +133,5 @@ func ShowCommandHelp() {
 }
 
 func init() {
-	commands = init_denon_commands()
+	commands = initDenonCommands()
 }

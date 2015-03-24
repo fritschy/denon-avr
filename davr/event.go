@@ -23,12 +23,13 @@ package davr
 import "bytes"
 
 const (
-	DavrEventNSE = iota
+	DavrEventNSE = iota // DavrEventNSE represents a display test line of up to 96 bytes
 	// DavrEventNSA
-	DavrEventGeneric
+	DavrEventGeneric // DavrEventGeneric represents a simple printable string
 )
 
-// We really have just 2 event types for now
+// DavrEvent represents an event from a Denon AVR
+// Currently only used for CookEvent
 // - NSE (or NSA) events, which are made up of parts
 // - Generic events which really are just a buffer of text
 type DavrEvent struct {
@@ -102,7 +103,7 @@ func (self *DavrEvent) String() string {
 	return string(self.data)
 }
 
-// Return a slightly higher level representation of an event
+// CookEvent returns a slightly higher level representation of an event
 // For most events this is not relevant, but NSE* events are special,
 // in that they contain a bit field for "cursor information"
 func CookEvent(ev []byte) DavrEvent {
