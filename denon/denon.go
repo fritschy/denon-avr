@@ -90,8 +90,10 @@ func main() {
 
 		case cmd, ok := <-input:
 			if !ok {
+				if refresh == noRefresh {
+					fmt.Println("")
+				}
 				conn.Close()
-				time.Sleep(5 * time.Second)
 				return
 			}
 			conn.GetCommandChan() <- cmd
