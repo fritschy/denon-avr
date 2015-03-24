@@ -102,6 +102,9 @@ func (self *DavrEvent) String() string {
 	return string(self.data)
 }
 
+// Return a slightly higher level representation of an event
+// For most events this is not relevant, but NSE* events are special,
+// in that they contain a bit field for "cursor information"
 func CookEvent(ev []byte) DavrEvent {
 	if len(ev) > 4 && ev[0] == 'N' && ev[1] == 'S' && (ev[2] == 'E' || ev[2] == 'A') {
 		// disregard everything after the first NUL byte

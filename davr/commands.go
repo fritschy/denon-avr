@@ -98,6 +98,7 @@ func init_denon_commands() *DenonCommands {
 
 var commands *DenonCommands
 
+// Return a readline completer, can be used for github.com/bobappleyard/readline
 func MakeReadlineCompleter() func(query, ctx string) []string {
 	words := make([]string, 0, commands.count)
 	return func(query, ctx string) []string {
@@ -107,6 +108,7 @@ func MakeReadlineCompleter() func(query, ctx string) []string {
 	}
 }
 
+// Mostly useless, prints some commands and descriptions thereof on stdout
 func ShowCommandHelp() {
 	fmt.Println("I know the following commands:\n")
 

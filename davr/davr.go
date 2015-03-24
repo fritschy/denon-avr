@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Implement channel-centric communication with a Denon AVR
 package davr
 
 import (
@@ -101,6 +102,7 @@ func readerToChan(r io.Reader, out chan []byte) {
 	}
 }
 
+// Represents a Denon AVR connection
 type DAVR struct {
 	conn       net.Conn
 	event_in   chan []byte /// events from avr can be read from here
@@ -119,6 +121,7 @@ func run(davr *DAVR) {
 	}
 }
 
+// Connect to an AVR
 func Connect(hostPort string) (*DAVR, error) {
 	var conn string
 
@@ -148,14 +151,21 @@ func Connect(hostPort string) (*DAVR, error) {
 	return davr, nil
 }
 
+// Return the write only command-channel to the AVR
 func (self *DAVR) GetCommandChannel() chan<- []byte {
 	return self.command_in
 }
 
+// Return the read-only event channel from the AVR
+// Events returned through this channel are already assembled
+// and guarantieed to be bounded and complete
+// When reading from this channel, check the ok-flag in
+// in order to determine if the connection is still alive.
 func (self *DAVR) GetEventChannel() <-chan []byte {
 	return self.event_in
 }
 
+// Close a Denon AVR connection
 func (self *DAVR) Close() {
 	self.conn.Close()
 	close(self.command_in)
