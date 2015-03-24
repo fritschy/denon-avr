@@ -29,65 +29,14 @@ import (
 	"strings"
 )
 
-type pipeStep func(input, output chan []byte)
-
-func eventAssembler(rawIn, eventOut chan []byte) {
-	scratch := make([]byte, 0)
-	sep := []byte{0xd}
-
-	for {
-		input, ok := <-rawIn
-
-		if !ok {
-			close(eventOut)
-			break
-		}
-
-		scratch = append(scratch, input...)
-
-		for {
-			evRest := bytes.SplitN(scratch, sep, 2)
-
-			if len(evRest) != 2 {
-				break
-			}
-
-			eventOut <- evRest[0]
-
-			if len(evRest) == 2 {
-				scratch = evRest[1]
-			} else {
-				// no remaining bytes, clear scratch
-				scratch = scratch[0:0]
-			}
-		}
-	}
-}
-
-func producer(f func(out chan []byte)) chan []byte {
-	out := make(chan []byte)
-	go f(out)
-	return out
-}
-
-// create a pipe-segment using func f
-func pipe(f pipeStep, in chan []byte) chan []byte {
-	out := make(chan []byte)
-	go f(in, out)
-	return out
-}
-
+// readerToChan reads from r and assembles messages
 func readerToChan(r io.Reader, out chan []byte) {
-	var n int
-	var err error
-	var buf []byte
+	buf := make([]byte, 1024)
+	assy := new(bytes.Buffer)
 
 	for {
-		if buf == nil {
-			buf = make([]byte, 1024)
-		}
+		n, err := r.Read(buf)
 
-		n, err = r.Read(buf)
 		if err != nil {
 			close(out)
 			return
@@ -97,8 +46,15 @@ func readerToChan(r io.Reader, out chan []byte) {
 			continue
 		}
 
-		out <- buf[:n]
-		buf = nil
+		assy.Write(buf[:n])
+
+		for { // assmble commands that are spread over mutliple reads
+			ev, e := assy.ReadBytes(0xd)
+			if e != nil || len(ev) == 0 {
+				break
+			}
+			out <- ev
+		}
 	}
 }
 
@@ -148,16 +104,9 @@ func New(hostPort string) (*DAVR, error) {
 		return nil, e
 	}
 
-	commandIn := make(chan []byte)
+	davr := &DAVR{c, make(chan []byte), make(chan []byte)}
 
-	// setup event pipe
-	eventIn := pipe(eventAssembler,
-		producer(func(out chan []byte) {
-			readerToChan(c, out)
-		}))
-
-	davr := &DAVR{c, eventIn, commandIn}
-
+	go readerToChan(c, davr.eventIn)
 	go commandProxy(davr)
 
 	return davr, nil
