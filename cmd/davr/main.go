@@ -33,9 +33,6 @@ import (
 func inputReader() <-chan []byte {
 	in := make(chan []byte)
 
-	readline.SetWordBreaks("")
-	readline.Completer = davr.MakeReadlineCompleter()
-
 	go func() {
 		for {
 			s, e := readline.String("Denon> ")
@@ -51,8 +48,6 @@ func inputReader() <-chan []byte {
 			readline.AddHistory(s)
 			time.Sleep(200 * time.Millisecond)
 		}
-
-		readline.Cleanup()
 	}()
 
 	return in
@@ -70,7 +65,11 @@ func main() {
 
 	davr.ShowCommandHelp()
 
+	readline.SetWordBreaks("")
+	readline.Completer = davr.MakeReadlineCompleter()
+	defer readline.Cleanup()
 	input := inputReader()
+
 	noRefresh := make(<-chan time.Time)
 	refresh := noRefresh
 
