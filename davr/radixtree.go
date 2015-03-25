@@ -84,7 +84,7 @@ func (node *radixNode) insert(str string) {
 // char 0x0 denotes root-node
 func (node *radixNode) getWords(char byte, cur string, ret *[]string) {
 	if char != 0 {
-		cur = fmt.Sprintf("%s%c", cur, char)
+		cur += string(char)
 	}
 
 	if node.end {
@@ -115,7 +115,7 @@ func (node *radixNode) query(char byte, str string, cur string, ret *[]string) {
 	}
 
 	if char != 0 {
-		cur = fmt.Sprintf("%s%c", cur, char)
+		cur += string(char)
 	}
 
 	if node.end {
