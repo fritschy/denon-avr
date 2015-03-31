@@ -81,6 +81,7 @@ func initDenonCommands() *DenonCommands {
 			commandCategory{"PSCNTAMT ", "LFC Amount", makeCommands("UP", "", "DOWN", "", "?", "")},
 			commandCategory{"NS", "Player Control", makeCommands("E", "Report Display Text (UTF-8)", "A", "Report Display Text (ASCII)", "RND", "Toggle Random", "RPT", "Toggle Repeat", "D", "Direct Text Search ('NSDx, where x = 0-9,A-Z)")},
 			commandCategory{"MN", "Menu Control", makeCommands("MEN?", "", "CUP", "up", "CDN", "down", "CRT", "right", "CLT", "left", "ENT", "enter", "OPT", "option", "INF", "info", "RTN", "return")},
+			commandCategory{"CV", "Channel Volume Control", makeCommands("?", "", "FL", "Front Left (+-0 at 50)", "FR", "Front Right (+-0 at 50)", "SW", "Subwoofer 1 (+-0 at 50)", "SW2", "Subwoofer 2 (+-0 at 50)")},
 		},
 		nil,
 		0,
